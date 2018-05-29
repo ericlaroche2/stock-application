@@ -1,0 +1,1 @@
+module.exports = { apikey: "V4450LI1B9EP59RO" }; // alphavantage api key, stock json
