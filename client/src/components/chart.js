@@ -1,16 +1,20 @@
+//https://codepen.io/Shamiul_Hoque/pen/LNavdZ LISTVIEW
 //https://www.codeproject.com/Tips/1215984/Update-State-of-a-Component-from-Another-in-React
 //https://www.npmjs.com/package/better-react-spinkit
 //https://medium.com/@ruthmpardee/passing-data-between-react-components-103ad82ebd17
+
+
 import React from "react";
-import { render } from "react-dom";
-import Tickerfield from "./tickerfield";
+//import { render } from "react-dom";
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 import { Chart } from "react-google-charts";
 const Spinner = require("react-spinner");
-const styles = {
-  fontFamily: "sans-serif",
-  textAlign: "center"
-};
 
+// const styles = {
+//   fontFamily: "sans-serif",
+//   textAlign: "center"
+// };
 
 class StockChart extends React.Component {
   constructor(props) {
@@ -18,11 +22,15 @@ class StockChart extends React.Component {
     this.state = {
       options: {
         title: "Age vs. Weight comparison",
-        hAxis: { title: "Date", format: 'dd-MM-yy' },
+        hAxis: { title: "Date", format: "dd-MM-yy" },
         vAxis: { title: "USD" },
-        legend: "none"
+        legend: "none",
+        animation: {
+          duration: 1500,
+          startup: true //This is the new option
+        }
       },
-      rows: [],
+      rows: this.props.rows,
       columns: [
         {
           type: "date",
@@ -30,63 +38,61 @@ class StockChart extends React.Component {
         },
         {
           type: "number",
-          label: "Weight"
+          label: "$"
         }
       ],
-      error: null,
+      error: false,
+      ticker: this.props.ticker
     };
-    this.getData = this.getData.bind(this);
-
+  }
+  componentWillMount() {
+    console.log("chart: " + this.state.ticker);
   }
 
-  componentDidMount() {
-    this.getData();
+  componentWillReceiveProps() {
+    this.setState({ rows: this.props.rows });
   }
 
-  getData() {
-    let rows = this.state.rows;
-    fetch("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=MSFT&apikey=demo")
-      .then(response => response.json())
-      .then((data) => {
-        let count = 0;
-        data = (data["Time Series (Daily)"]);
-        for (var key in data) {
-          if (data.hasOwnProperty(key)) {
-            //console.log(key + " -> " + data[key]["4. close"]);
-            let split = key.split("-");
-            rows.push([new Date(key), Number(data[key]["4. close"])]);
-            // console.log(rows[count++]);
-          }
-        }
-        this.setState({ rows: rows, error: false });
-      }).catch(error => this.setState({ error: true }));
-
-  }
   render() {
     if (this.state.error === false) {
+      console.log("rendering chart: " + this.props.ticker);
       return (
         <Chart
           chartType="AnnotationChart"
           rows={this.state.rows}
           columns={this.state.columns}
           options={this.state.options}
-          graph_id="annotationchart"
+          graph_id={this.state.ticker}
           width={"100%"}
-          height={"400px"}
+          height={"300px"}
           legend_toggle
         />
       );
     } else if (this.state.error === true) {
       return (
-        <p>There was an error getting the chart data from the server. Try asgain later</p>
+        <p>
+          There was an error getting the chart data from the server. Try again
+          later
+        </p>
       );
     } else {
+      console.log("circularprog");
       return (
-        <div><Spinner /></div>
+          <Chart
+            chartType="AnnotationChart"
+            columns={this.state.columns}
+            options={this.state.options}
+            graph_id={this.state.ticker}
+            animation={this.state.animation}
+            width={"100%"}
+            height={"300px"}
+            legend_toggle
+          />
       );
     }
   }
-  componentDidCatch(error, info) { //can remove with state
+  componentDidCatch(error, info) {
+    //can remove with state
     // Display fallback UI
     this.setState({ hasError: true });
     // You can also log the error to an error reporting service
